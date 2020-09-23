@@ -1,0 +1,23 @@
+{
+  "name": "solcontracts",
+  "version": "1.0.0",
+  "description": "current address (mainnet):",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TokenViewPortal/solcontracts.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TokenViewPortal/solcontracts/issues"
+  },
+  "homepage": "https://github.com/TokenViewPortal/solcontracts#readme",
+  "dependencies": {
+    "truffle": "^5.1.45",
+    "truffle-flattener": "^1.5.0"
+  }
+}
