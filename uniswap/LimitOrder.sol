@@ -1,10 +1,12 @@
 pragma solidity ^0.6.6;
 
-import './periphery-v2/contracts/UniswapV2Router02.sol';
+import './UniswapRouter.sol';
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol";
 
 contract LimitSwap{
     uint256 public flatcost = 2 finney;
+    
+    uint256 public paymentsFulfilled;
     address public admin;
     uint64 public currentid;
     address public uniswapRouterAddress = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
@@ -17,16 +19,21 @@ contract LimitSwap{
     mapping(uint64 => uint256) outamt;
     mapping(uint64 => uint256) deadline; 
     mapping(uint64 => bool) outexact;
+    mapping(address => mapping(uint64 => uint256)) public paymentBalance;
     
     constructor() public {
         admin = msg.sender;
         uniswapRouter = IUniswapV2Router(uniswapRouterAddress);
     }
+    receive() external payable {
+        revert(); //revert mistaken eth
+    }
 	function requestSwapExactTokenForTokens(address intoken, address outtoken, uint256 inamount, uint256 minoutamount, uint256 expiretime) 
 	external payable{
 	    require(msg.value == flatcost, 'invalid payment');
-	    
+	 
 	    currentid++;
+	    paymentBalance[msg.sender][currentid] += flatcost;
 	    requester[currentid] = msg.sender;
 	    inaddress[currentid] = intoken;
 	    outaddress[currentid] = outtoken;
@@ -45,6 +52,7 @@ contract LimitSwap{
 	    require(msg.value == flatcost, 'invalid payment');
 	    
 	    currentid++;
+	    paymentBalance[msg.sender][currentid] += flatcost;
 	    requester[currentid] = msg.sender;
 	    inaddress[currentid] = intoken;
 	    outaddress[currentid] = outtoken;
@@ -58,11 +66,15 @@ contract LimitSwap{
 	    it.approve(uniswapRouterAddress, inamount); //approve uniswap router to spend tokens
 	    emit Requested(currentid, msg.sender, inamt[currentid], outamt[currentid], expiretime, outexact[currentid]);
 	}
+	/**
+	 * @dev adds inamount to paymentBalance, so that eth given to contract, but not fulfilled, can be refunded
+	 * */
 	function requestSwapExactETHForTokens(address outtoken, uint256 inamount, uint256 outamount, uint256 expiretime) 
 	external payable{
 	    require(msg.value == flatcost + inamount, 'invalid payment');
 	    
 	    currentid++;
+	    paymentBalance[msg.sender][currentid] += flatcost + inamount;
 	    requester[currentid] = msg.sender;
 	    inaddress[currentid] = address(0);
 	    outaddress[currentid] = outtoken;
@@ -73,11 +85,14 @@ contract LimitSwap{
 	    
 	    emit Requested(currentid, msg.sender, inamt[currentid], outamt[currentid], expiretime, outexact[currentid]);
 	}
+	/**
+	 * @dev adds inamount to paymentBalance, so that eth given to contract, but not fulfilled, can be refunded
+	 * */
 	function requestSwapEthForExactTokens(address outtoken, uint256 inamount, uint256 outamount, uint256 expiretime) 
 	external payable{
 	    require(msg.value == flatcost + inamount, 'invalid payment');
-	    
 	    currentid++;
+	    paymentBalance[msg.sender][currentid] += flatcost + inamount;
 	    requester[currentid] = msg.sender;
 	    inaddress[currentid] = address(0);
 	    outaddress[currentid] = outtoken;
@@ -90,9 +105,9 @@ contract LimitSwap{
 	}
 	function requestSwapTokensForExactETH(address intoken, uint256 inamount, uint256 outamount, uint256 expiretime) 
 	external payable{
-	    require(msg.value == flatcost + inamount, 'invalid payment');
-	    
+	    require(msg.value == flatcost, 'invalid payment');
 	    currentid++;
+	    paymentBalance[msg.sender][currentid] += flatcost;
 	    requester[currentid] = msg.sender;
 	    inaddress[currentid] = intoken;
 	    outaddress[currentid] = address(0);
@@ -105,9 +120,9 @@ contract LimitSwap{
 	}
 	function requestSwapExactTokensForETH(address intoken, uint256 inamount, uint256 outamount, uint256 expiretime) 
 	external payable{
-	    require(msg.value == flatcost + inamount, 'invalid payment');
-	    
+	    require(msg.value == flatcost, 'invalid payment');
 	    currentid++;
+	    paymentBalance[msg.sender][currentid] += flatcost;
 	    requester[currentid] = msg.sender;
 	    inaddress[currentid] = intoken;
 	    outaddress[currentid] = address(0);
@@ -153,23 +168,41 @@ contract LimitSwap{
                     );
             }
         }
-        
-        //
         emit Fulfilled(id, msg.sender, path);
     }
-    function setAdmin(address newadmin) external {
-        require(msg.sender == admin, 'sender isnt admin');
+    function batchRefund(uint64[] memory ids) external {
+        uint256 refund;
+        uint64[] memory successfulRefunds = new uint64[](ids.length);
+        for(uint i = 0; i < ids.length; i++){
+            require(requester[ids[i]] == msg.sender || admin == msg.sender);
+            if(paymentBalance[msg.sender][ids[i]] > 0){
+                successfulRefunds[i] = ids[i];
+                refund += paymentBalance[msg.sender][ids[i]];
+                paymentBalance[msg.sender][ids[i]] = 0;
+            }
+        }
+        msg.sender.transfer(refund);
+        emit Refunded(successfulRefunds);
+    }
+    //admin
+    modifier onlyAdmin() {
+        require(msg.sender == admin, "Caller is not admin");
+        _;
+    }
+    function withdrawPayments() external onlyAdmin{
+        msg.sender.transfer(paymentsFulfilled);
+    }
+    function setAdmin(address newadmin) external onlyAdmin{
         admin = newadmin;
     }
-    function setCost(uint256 newCost) external {
-        require(msg.sender == admin, 'sender isnt admin');
+    function setCost(uint256 newCost) external onlyAdmin{
         flatcost = newCost;
     }
-    function setUni(address newUniAddress) external {
-        require(msg.sender == admin, 'sender isnt admin');
+    function setUni(address newUniAddress) external onlyAdmin {
         uniswapRouterAddress = newUniAddress;
         uniswapRouter = IUniswapV2Router(newUniAddress);
     }
+    event Refunded(uint64[] ids);
     event Requested(uint64 indexed id, address indexed requester, uint256 inamt, uint256 outamt, uint256 deadline, bool outexact);
     event Fulfilled(uint64 indexed id, address indexed fulfiller, address[] path);
 }
