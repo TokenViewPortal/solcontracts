@@ -1,51 +1,27 @@
 [
   {
-    "inputs": [],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint64",
-        "name": "id",
-        "type": "uint64"
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "fulfiller",
+        "name": "spender",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "outamt",
+        "name": "value",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address[]",
-        "name": "path",
-        "type": "address[]"
       }
     ],
-    "name": "Fulfilled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint64[]",
-        "name": "ids",
-        "type": "uint64[]"
-      }
-    ],
-    "name": "Refunded",
+    "name": "Approval",
     "type": "event"
   },
   {
@@ -53,124 +29,71 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint64",
-        "name": "id",
-        "type": "uint64"
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
       },
       {
         "indexed": true,
         "internalType": "address",
-        "name": "requester",
+        "name": "to",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "inamt",
+        "name": "value",
         "type": "uint256"
+      }
+    ],
+    "name": "Transfer",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
       },
       {
-        "indexed": false,
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      }
+    ],
+    "name": "allowance",
+    "outputs": [
+      {
         "internalType": "uint256",
-        "name": "outamt",
+        "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
       },
       {
-        "indexed": false,
         "internalType": "uint256",
-        "name": "deadline",
+        "name": "amount",
         "type": "uint256"
-      },
+      }
+    ],
+    "name": "approve",
+    "outputs": [
       {
-        "indexed": false,
         "internalType": "bool",
-        "name": "outexact",
+        "name": "",
         "type": "bool"
       }
     ],
-    "name": "Requested",
-    "type": "event"
-  },
-  {
-    "inputs": [],
-    "name": "admin",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint64[]",
-        "name": "ids",
-        "type": "uint64[]"
-      }
-    ],
-    "name": "batchRefundEth",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint64[]",
-        "name": "ids",
-        "type": "uint64[]"
-      }
-    ],
-    "name": "batchRefundTokens",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "currentid",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "flatcost",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint64",
-        "name": "id",
-        "type": "uint64"
-      },
-      {
-        "internalType": "address[]",
-        "name": "path",
-        "type": "address[]"
-      }
-    ],
-    "name": "fulfillSwap",
-    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -178,16 +101,11 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "account",
         "type": "address"
-      },
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
       }
     ],
-    "name": "paymentBalance",
+    "name": "balanceOf",
     "outputs": [
       {
         "internalType": "uint256",
@@ -200,7 +118,7 @@
   },
   {
     "inputs": [],
-    "name": "paymentsFulfilled",
+    "name": "totalSupply",
     "outputs": [
       {
         "internalType": "uint256",
@@ -215,241 +133,53 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "outtoken",
+        "name": "recipient",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "inamount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "outamount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "expiretime",
+        "name": "amount",
         "type": "uint256"
       }
     ],
-    "name": "requestSwapEthForExactTokens",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "outtoken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "inamount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "outamount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "expiretime",
-        "type": "uint256"
-      }
-    ],
-    "name": "requestSwapExactETHForTokens",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "intoken",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "outtoken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "inamount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "minoutamount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "expiretime",
-        "type": "uint256"
-      }
-    ],
-    "name": "requestSwapExactTokenForTokens",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "intoken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "inamount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "outamount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "expiretime",
-        "type": "uint256"
-      }
-    ],
-    "name": "requestSwapExactTokensForETH",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "intoken",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "outtoken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "inamount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "outamount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "expiretime",
-        "type": "uint256"
-      }
-    ],
-    "name": "requestSwapTokenForExactTokens",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "intoken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "inamount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "outamount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "expiretime",
-        "type": "uint256"
-      }
-    ],
-    "name": "requestSwapTokensForExactETH",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newadmin",
-        "type": "address"
-      }
-    ],
-    "name": "setAdmin",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "newCost",
-        "type": "uint256"
-      }
-    ],
-    "name": "setCost",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newUniAddress",
-        "type": "address"
-      }
-    ],
-    "name": "setUni",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "uniswapRouterAddress",
+    "name": "transfer",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "bool",
         "name": "",
-        "type": "address"
+        "type": "bool"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "withdrawPayments",
-    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "stateMutability": "payable",
-    "type": "receive"
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "transferFrom",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ]
