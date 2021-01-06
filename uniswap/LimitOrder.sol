@@ -45,10 +45,10 @@ contract LimitOrder{
 	    ERC20 it = ERC20(intoken);
 	    it.transferFrom(msg.sender, address(this), inamount); //transfer tokens from user to this
 	    it.approve(uniswapRouterAddress, inamount); //approve uniswap router to spend tokens
-	    emit Requested(currentid, msg.sender, inamt[currentid], outamt[currentid], expiretime, outexact[currentid]);
+	    emit Requested(currentid, msg.sender, intoken, outtoken, inamt[currentid], outamt[currentid], expiretime, outexact[currentid]);
 	}
 	/**
-	 * @dev adds inamount to paymentBalance, so that eth given to contract, but not fulfilled, can be refunded
+	 * @dev adds inamount to paymentBalance, so that tokens given to contract, but not fulfilled, can be refunded
 	 * */
 	function requestSwapTokenForExactTokens(address intoken, address outtoken, uint256 inamount, uint256 outamount, uint256 expiretime) 
 	external payable{
@@ -67,7 +67,7 @@ contract LimitOrder{
 	    ERC20 it = ERC20(intoken);
 	    it.transferFrom(msg.sender, address(this), inamount); //transfer tokens from user to this
 	    it.approve(uniswapRouterAddress, inamount); //approve uniswap router to spend tokens
-	    emit Requested(currentid, msg.sender, inamt[currentid], outamt[currentid], expiretime, outexact[currentid]);
+	    emit Requested(currentid, msg.sender, intoken, outtoken, inamt[currentid], outamt[currentid], expiretime, outexact[currentid]);
 	}
 	/**
 	 * @dev adds inamount to paymentBalance, so that eth given to contract, but not fulfilled, can be refunded
@@ -79,14 +79,14 @@ contract LimitOrder{
 	    currentid++;
 	    paymentBalance[currentid] += flatcost + inamount;
 	    requester[currentid] = msg.sender;
-	    inaddress[currentid] = address(0);
+	    inaddress[currentid] = uniswapRouter.WETH();
 	    outaddress[currentid] = outtoken;
 	    inamt[currentid] = inamount;
 	    outamt[currentid] = outamount;
 	    deadline[currentid] = expiretime;
 	    outexact[currentid] = true;
 	    
-	    emit Requested(currentid, msg.sender, inamt[currentid], outamt[currentid], expiretime, outexact[currentid]);
+	    emit Requested(currentid, msg.sender, uniswapRouter.WETH(), outtoken, inamt[currentid], outamt[currentid], expiretime, outexact[currentid]);
 	}
 	/**
 	 * @dev adds inamount to paymentBalance, so that eth given to contract, but not fulfilled, can be refunded
@@ -97,14 +97,14 @@ contract LimitOrder{
 	    currentid++;
 	    paymentBalance[currentid] += flatcost + inamount;
 	    requester[currentid] = msg.sender;
-	    inaddress[currentid] = address(0);
+	    inaddress[currentid] = uniswapRouter.WETH();
 	    outaddress[currentid] = outtoken;
 	    inamt[currentid] = inamount;
 	    outamt[currentid] = outamount;
 	    deadline[currentid] = expiretime;
 	    outexact[currentid] = true;
 	    
-	    emit Requested(currentid, msg.sender, inamt[currentid], outamt[currentid], expiretime, outexact[currentid]);
+	    emit Requested(currentid, msg.sender, uniswapRouter.WETH(), outtoken, inamt[currentid], outamt[currentid], expiretime, outexact[currentid]);
 	}
 	function requestSwapTokensForExactETH(address intoken, uint256 inamount, uint256 outamount, uint256 expiretime) 
 	external payable{
@@ -113,13 +113,16 @@ contract LimitOrder{
 	    paymentBalance[currentid] += flatcost;
 	    requester[currentid] = msg.sender;
 	    inaddress[currentid] = intoken;
-	    outaddress[currentid] = address(0);
+	    outaddress[currentid] = uniswapRouter.WETH();
 	    inamt[currentid] = inamount;
 	    outamt[currentid] = outamount;
 	    deadline[currentid] = expiretime;
 	    outexact[currentid] = true;
 	    
-	    emit Requested(currentid, msg.sender, inamt[currentid], outamt[currentid], expiretime, outexact[currentid]);
+	    ERC20 it = ERC20(intoken);
+	    it.transferFrom(msg.sender, address(this), inamount); //transfer tokens from user to this
+	    
+	    emit Requested(currentid, msg.sender, intoken, uniswapRouter.WETH(), inamt[currentid], outamt[currentid], expiretime, outexact[currentid]);
 	}
 	function requestSwapExactTokensForETH(address intoken, uint256 inamount, uint256 outamount, uint256 expiretime) 
 	external payable{
@@ -128,26 +131,36 @@ contract LimitOrder{
 	    paymentBalance[currentid] += flatcost;
 	    requester[currentid] = msg.sender;
 	    inaddress[currentid] = intoken;
-	    outaddress[currentid] = address(0);
+	    outaddress[currentid] = uniswapRouter.WETH();
 	    inamt[currentid] = inamount;
 	    outamt[currentid] = outamount;
 	    deadline[currentid] = expiretime;
 	    outexact[currentid] = true;
 	    
-	    emit Requested(currentid, msg.sender, inamt[currentid], outamt[currentid], expiretime, outexact[currentid]);
+	    ERC20 it = ERC20(intoken);
+	    it.transferFrom(msg.sender, address(this), inamount); //transfer tokens from user to this
+	    
+	    emit Requested(currentid, msg.sender, intoken, uniswapRouter.WETH(), inamt[currentid], outamt[currentid], expiretime, outexact[currentid]);
 	}
-	function fulfillSwap(uint64 id, address[] calldata path) external {
+	function fulfillSwap(uint64 id, address[] memory path) external {
 	    //require(tknv.balanceOf(msg.sender) >= tknvRequired, 'membership required');
         require(id <= currentid, 'invalid id');
-        if(inaddress[id] == address(0)){
+        if(inaddress[id] == uniswapRouter.WETH()){
+            require(outaddress[id] == path[path.length - 1], 'invalid path');
             require(paymentBalance[id] >= flatcost + inamt[id], 'request cancelled');
+            //uniswapRouterAddress.call{value: inamt[id]}(abi.encode(bytes4(keccak256("swapETHForExactTokens(uint,address[],address,uint)")), outamt[id], path, requester[id], deadline[id]));
+            //require(success, 'swap failed');
             uniswapRouter.swapETHForExactTokens{value: inamt[id]}(
                 outamt[id], path, requester[id], deadline[id]
                 ); //automatically transfers tokens to requester
-        } else if(outaddress[id] == address(0)){
+        } else if(outaddress[id] == uniswapRouter.WETH()){
+            require(inaddress[id] == path[0], 'invalid path');
             require(paymentBalance[id] >= flatcost, 'request cancelled');
             ERC20 spending = ERC20(path[0]);
             spending.approve(uniswapRouterAddress, inamt[id]);
+            //(bool success, ) = inaddress[id].call(abi.encode(bytes4(keccak256("approve(address,uint256)")), uniswapRouterAddress, inamt[id]));
+            //(bool success, ) = uniswapRouterAddress.call(abi.encode(bytes4(keccak256("swapTokensForExactETH(uint256,uint256,address[],address,uint256)")), outamt[id], inamt[id], path, requester[id], deadline[id]));
+            //require(success, 'approve failed');
             uniswapRouter.swapTokensForExactETH(
                 outamt[id], inamt[id], path, requester[id], deadline[id]
                 );
@@ -156,6 +169,8 @@ contract LimitOrder{
             require(paymentBalance[id] >= flatcost, 'request cancelled');
             ERC20 spending = ERC20(path[0]);
             spending.approve(uniswapRouterAddress, inamt[id]);
+            //(bool success, ) = uniswapRouterAddress.call(abi.encode(bytes4(keccak256("swapTokensForExactTokens(uint256,address[],address,uint256)")), inamt[id], outamt[id], path, requester[id], deadline[id]));
+            //require(success, 'swap failed');
             uniswapRouter.swapTokensForExactTokens(
                 inamt[id], outamt[id], path, requester[id], deadline[id]
                 );
@@ -166,13 +181,15 @@ contract LimitOrder{
     }
     function fulfillSwapSupportingFeeOnTransferTokens(uint64 id, address[] calldata path) external{
         require(id <= currentid, 'invalid id');
-        if(inaddress[id] == address(0)){
+        if(inaddress[id] == uniswapRouter.WETH()){
+            require(outaddress[id] == path[0], 'invalid path');
             require(paymentBalance[id] >= flatcost + inamt[id], 'request cancelled');
             uniswapRouter.swapExactETHForTokensSupportingFeeOnTransferTokens{value: inamt[id]}(
                 outamt[id], path, requester[id], deadline[id]
                 ); //automatically transfers tokens to requester
             
-        } else if(outaddress[id] == address(0)){
+        } else if(outaddress[id] == uniswapRouter.WETH()){
+            require(inaddress[id] == path[0], 'invalid path');
             require(paymentBalance[id] >= flatcost, 'request cancelled');
             ERC20 spending = ERC20(path[0]);
             spending.approve(uniswapRouterAddress, inamt[id]);
@@ -249,7 +266,7 @@ contract LimitOrder{
         uniswapRouter = IUniswapV2Router(newUniAddress);
     }
     event Refunded(uint64[] ids);
-    event Requested(uint64 indexed id, address indexed requester, uint256 inamt, uint256 outamt, uint256 deadline, bool outexact);
+    event Requested(uint64 indexed id, address indexed requester, address intoken, address outtoken, uint256 inamt, uint256 outamt, uint256 deadline, bool outexact);
     event Fulfilled(uint64 indexed id, address indexed fulfiller, uint256 outamt, address[] path);
 }
 //OZ ierc20
