@@ -390,6 +390,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "recoveradmin",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -608,6 +621,19 @@
       }
     ],
     "name": "setCost",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newadmin",
+        "type": "address"
+      }
+    ],
+    "name": "setRecoverAdmin",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
